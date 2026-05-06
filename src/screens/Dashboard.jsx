@@ -1,0 +1,201 @@
+import { AlertTriangle, Bell, ChevronRight, ClipboardList, Droplets, Heart, MapPin } from 'lucide-react'
+import BloodBadge from '../components/ui/BloodBadge'
+import HelpButton from '../components/ui/HelpButton'
+import UrgencyBadge from '../components/ui/UrgencyBadge'
+import VerifiedBadge from '../components/ui/VerifiedBadge'
+import { getDonationEligibility } from '../utils/bloodCompatibility'
+
+export default function Dashboard({ navigate, requests, donorProfile }) {
+  const featured = requests[0]
+  const topRequests = requests.slice(0, 3)
+
+  return (
+    <>
+      <div style={{ padding: '18px 16px 14px', background: 'linear-gradient(180deg, #fffefe 0%, #fff3f2 100%)', flexShrink: 0, borderBottom: '1px solid #f5eaea' }}>
+        <div className="lifedrop-slide-up" style={{ background: 'rgba(255,255,255,0.84)', border: '1px solid #f5e2df', borderRadius: 24, padding: '16px 16px 14px', boxShadow: '0 14px 34px rgba(192,57,43,0.08)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontSize: 10, color: '#C66A5B', fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 5 }}>
+                Donor Spotlight
+              </div>
+              <div style={{ fontSize: 21, fontWeight: 900, color: '#1a1a1a', letterSpacing: -0.3 }}>
+                Hello, {donorProfile?.fullName?.split(' ')[0] || 'Priyanka'} 👋
+              </div>
+              <div style={{ fontSize: 12, color: '#aaa', marginTop: 2, fontWeight: 500 }}>
+                Your help can save lives today
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+              <button style={{ background: '#FDF0F0', border: 'none', width: 38, height: 38, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}>
+                <Bell size={17} color="#C0392B" />
+                <span className="lifedrop-pulse" style={{ position: 'absolute', top: 6, right: 6, width: 8, height: 8, borderRadius: '50%', background: '#C0392B', border: '1.5px solid white' }} />
+              </button>
+              <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg, #FDECEA, #f5c6c6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, border: '2.5px solid #E85D5D' }}>
+                👩
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+            <div style={{ flex: 1, background: '#fff7f5', border: '1px solid #f4dfdb', borderRadius: 16, padding: '9px 12px' }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: '#C0392B' }}>Verified Donor</div>
+              <div style={{ fontSize: 10, color: '#9a7e78', marginTop: 2 }}>Health profile complete</div>
+            </div>
+            <div style={{ flex: 1, background: '#fff7f5', border: '1px solid #f4dfdb', borderRadius: 16, padding: '9px 12px' }}>
+              <div style={{ fontSize: 11, fontWeight: 800, color: '#C0392B' }}>Safe Matching</div>
+              <div style={{ fontSize: 10, color: '#9a7e78', marginTop: 2 }}>Compatibility checks on</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'none', background: '#F9F2F2' }}>
+        <div style={{ padding: '14px 16px 20px' }}>
+          {featured && (
+            <div className="lifedrop-slide-up" onClick={() => navigate('details', featured)} style={{ background: 'linear-gradient(135deg, #8F1C17 0%, #C0392B 38%, #EF6A5A 100%)', borderRadius: 24, padding: '20px 18px', marginBottom: 18, cursor: 'pointer', boxShadow: '0 16px 36px rgba(192,57,43,0.38)', position: 'relative', overflow: 'hidden' }}>
+              <div className="lifedrop-float" style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
+              <div style={{ position: 'absolute', bottom: -25, left: -15, width: 90, height: 90, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
+              <div style={{ fontSize: 10, color: 'rgba(255,255,255,0.75)', fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 10 }}>
+                🚨 Active Emergency Nearby
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{ fontSize: 30, fontWeight: 900, color: 'white', lineHeight: 1 }}>{featured.blood}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <MapPin size={12} color="rgba(255,255,255,0.75)" />
+                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)', fontWeight: 600 }}>{featured.dist} away</span>
+                  </div>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.18)', borderRadius: 20, padding: '5px 13px', border: '1px solid rgba(255,255,255,0.25)' }}>
+                  <span className={featured.urgency === 'Critical' ? 'lifedrop-pulse' : ''} style={{ display: 'inline-block', fontSize: 11, fontWeight: 800, color: 'white' }}>{featured.urgency}</span>
+                </div>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.95)', borderRadius: 12, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <span style={{ color: '#C0392B', fontWeight: 800, fontSize: 14 }}>View Request</span>
+                <ChevronRight size={14} color="#C0392B" />
+              </div>
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
+            {[
+              { num: '12', label: 'Lives Saved', icon: '❤️', color: '#C0392B' },
+              { num: '8', label: 'Donations', icon: '🩸', color: '#E05050' },
+              { num: requests.length, label: 'Live Requests', icon: '🏥', color: '#D68910' },
+            ].map((s, index) => (
+              <div key={s.label} className={`lifedrop-slide-up ${index === 0 ? 'lifedrop-slide-delay-1' : index === 1 ? 'lifedrop-slide-delay-2' : 'lifedrop-slide-delay-3'}`} style={{ flex: 1, background: 'linear-gradient(180deg, #ffffff 0%, #fff7f5 100%)', borderRadius: 18, padding: '12px 10px', textAlign: 'center', boxShadow: '0 10px 24px rgba(0,0,0,0.06)', border: '1px solid #f4e5e2' }}>
+                <div style={{ fontSize: 20 }}>{s.icon}</div>
+                <div style={{ fontSize: 17, fontWeight: 900, color: s.color, marginTop: 2 }}>{s.num}</div>
+                <div style={{ fontSize: 10, color: '#aaa', fontWeight: 600, marginTop: 1 }}>{s.label}</div>
+              </div>
+            ))}
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>Nearby Requests</div>
+            <button onClick={() => navigate('emergency')} style={{ background: 'none', border: 'none', color: '#C0392B', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2, fontFamily: 'Nunito, sans-serif' }}>
+              See all <ChevronRight size={13} />
+            </button>
+          </div>
+
+          {topRequests.map((request) => {
+            const eligibility = getDonationEligibility(donorProfile, request.blood)
+            return (
+              <div key={request.id} className="lifedrop-slide-up lifedrop-slide-delay-1" onClick={() => navigate('details', request)} style={{ background: 'linear-gradient(180deg, #ffffff 0%, #fffaf9 100%)', borderRadius: 20, padding: '14px 16px', marginBottom: 10, boxShadow: '0 10px 24px rgba(0,0,0,0.06)', cursor: 'pointer', border: '1px solid #f4e5e2' }}>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <div style={{ background: '#FDF0F0', borderRadius: 12, padding: '8px 10px', flexShrink: 0 }}>
+                    <BloodBadge type={request.blood} size="sm" />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 3 }}>
+                      <div style={{ fontSize: 14, fontWeight: 800, color: '#1a1a1a' }}>{request.title}</div>
+                      <span style={{ fontSize: 11, color: '#bbb', fontWeight: 500 }}>{request.time}</span>
+                    </div>
+                    <div style={{ fontSize: 12, color: '#999', marginBottom: 8 }}>
+                      <MapPin size={10} style={{ display: 'inline', marginRight: 3, verticalAlign: 'middle' }} />
+                      {request.hospital} · {request.dist}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <VerifiedBadge />
+                        <UrgencyBadge level={request.urgency} />
+                      </div>
+                      {eligibility.allowed ? (
+                        <HelpButton onClick={(e) => { e.stopPropagation(); navigate('details', request) }} style={{ padding: '8px 16px', fontSize: 12, boxShadow: '0 8px 18px rgba(192,57,43,0.26)' }} />
+                      ) : (
+                        <span style={blockedPillStyle}>
+                          <AlertTriangle size={12} />
+                          Can&apos;t donate now
+                        </span>
+                      )}
+                    </div>
+                    {!eligibility.allowed && eligibility.reason === 'cooldown' && (
+                      <div style={cooldownInfoStyle}>
+                        <AlertTriangle size={13} color="#9F2F21" />
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 900, color: '#9F2F21' }}>
+                            Donation cooldown active
+                          </div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: '#A65A4B', marginTop: 2 }}>
+                            Available again in {eligibility.daysRemaining} days
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+
+          <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a', marginTop: 6, marginBottom: 10 }}>My Activity</div>
+          <div style={{ display: 'flex', gap: 10 }}>
+            {[
+              { icon: <Droplets size={24} color="#C0392B" />, label: 'My Donations', count: 8 },
+              { icon: <ClipboardList size={24} color="#E05050" />, label: 'My Requests', count: requests.length },
+              { icon: <Heart size={24} color="#C0392B" fill="#C0392B" />, label: 'Saved Lives', count: 12 },
+            ].map((a) => (
+              <div key={a.label} className="lifedrop-slide-up lifedrop-slide-delay-2" style={{ flex: 1, background: 'linear-gradient(180deg, #ffffff 0%, #fff8f6 100%)', borderRadius: 18, padding: '14px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, boxShadow: '0 10px 24px rgba(0,0,0,0.05)', border: '1px solid #f4e5e2' }}>
+                {a.icon}
+                <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a' }}>{a.count}</div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: '#888', textAlign: 'center' }}>{a.label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
+const cooldownInfoStyle = {
+  marginTop: 10,
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  background: 'linear-gradient(135deg, #FFF1ED 0%, #FFE2DB 100%)',
+  border: '1px solid #F4B9AB',
+  borderLeft: '4px solid #D64532',
+  borderRadius: 16,
+  padding: '10px 12px',
+}
+
+const blockedPillStyle = {
+  fontSize: 11,
+  fontWeight: 800,
+  color: '#A94442',
+  background: '#FDECEA',
+  border: '1px solid #F2C6C6',
+  borderRadius: 14,
+  padding: '7px 10px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 6,
+  flexShrink: 1,
+  maxWidth: '100%',
+  minWidth: 0,
+  whiteSpace: 'normal',
+  lineHeight: 1.25,
+  justifyContent: 'center',
+  textAlign: 'center',
+}
