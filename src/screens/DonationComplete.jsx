@@ -12,23 +12,30 @@ export default function DonationComplete({ navigate, selectedBlood, donorProfile
   const cooldown = getCooldownStatus(donorProfile?.lastDonationDate || getTodayIsoDate())
 
   const downloadCertificate = () => {
-    const certificateText = [
-      'LifeDrop Donation Certificate',
-      '',
-      `Donor: ${donorProfile?.fullName || 'Verified Donor'}`,
-      `Blood Group: ${selectedBlood || donorProfile?.bloodGroup || 'O+'}`,
-      `Donation Date: ${formatDisplayDate(new Date())}`,
-      'Hospital: City Hospital',
-      '',
-      'Thank you for helping save lives with LifeDrop.',
-    ].join('\n')
+    const donationDate = new Date()
+    const donorName = donorProfile?.fullName || 'Verified Donor'
+    const bloodGroup = selectedBlood || donorProfile?.bloodGroup || 'O+'
+    const certificateId = `LD-${donationDate.getFullYear()}-${String(donationDate.getMonth() + 1).padStart(2, '0')}${String(donationDate.getDate()).padStart(2, '0')}-${String(donationDate.getHours()).padStart(2, '0')}${String(donationDate.getMinutes()).padStart(2, '0')}`
+    const certificateHtml = createCertificateHtml({
+      donorName,
+      bloodGroup,
+      donationDate: formatDisplayDate(donationDate),
+      hospitalName: 'City Hospital',
+      certificateId,
+    })
 
-    const blob = new Blob([certificateText], { type: 'text/plain;charset=utf-8' })
+    const blob = new Blob([certificateHtml], { type: 'text/html;charset=utf-8' })
+    const blobUrl = URL.createObjectURL(blob)
     const link = document.createElement('a')
-    link.href = URL.createObjectURL(blob)
-    link.download = 'lifedrop-donation-certificate.txt'
+    link.href = blobUrl
+    link.download = `lifedrop-donation-certificate-${certificateId}.html`
     link.click()
-    URL.revokeObjectURL(link.href)
+
+    window.open(blobUrl, '_blank', 'noopener,noreferrer')
+
+    window.setTimeout(() => {
+      URL.revokeObjectURL(blobUrl)
+    }, 5000)
   }
 
   return (
@@ -244,4 +251,325 @@ const resetButtonStyle = {
   fontWeight: 800,
   cursor: 'pointer',
   fontFamily: 'Nunito, sans-serif',
+}
+
+function createCertificateHtml({ donorName, bloodGroup, donationDate, hospitalName, certificateId }) {
+  return `<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>LifeDrop Donation Certificate</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: Georgia, "Times New Roman", serif;
+        background: linear-gradient(135deg, #f7e6e3 0%, #fff8f6 100%);
+        color: #3b1f1a;
+        padding: 32px;
+        min-height: 100vh;
+        overflow-y: auto;
+      }
+      .certificate {
+        max-width: 980px;
+        margin: 0 auto;
+        background: #fffdfc;
+        border: 14px solid #b03020;
+        border-radius: 28px;
+        padding: 44px 48px;
+        box-shadow: 0 24px 60px rgba(176, 48, 32, 0.16);
+        position: relative;
+        overflow: hidden;
+      }
+      .certificate::before,
+      .certificate::after {
+        content: "";
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(176, 48, 32, 0.06);
+      }
+      .certificate::before {
+        width: 220px;
+        height: 220px;
+        top: -70px;
+        right: -70px;
+      }
+      .certificate::after {
+        width: 180px;
+        height: 180px;
+        left: -50px;
+        bottom: -50px;
+      }
+      .top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .drop {
+        width: 58px;
+        height: 58px;
+        border-radius: 18px;
+        background: linear-gradient(135deg, #b03020, #e05050);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 28px;
+        font-weight: 700;
+      }
+      .brand h1 {
+        margin: 0;
+        font-size: 34px;
+        color: #b03020;
+      }
+      .brand p {
+        margin: 4px 0 0;
+        font-family: Arial, sans-serif;
+        font-size: 13px;
+        color: #8b6b66;
+      }
+      .badge {
+        border: 1px solid #efc4bd;
+        background: #fff1ed;
+        color: #a12a20;
+        border-radius: 999px;
+        padding: 10px 14px;
+        font: 700 12px Arial, sans-serif;
+        letter-spacing: 0.4px;
+        text-transform: uppercase;
+      }
+      .title {
+        text-align: center;
+        margin: 30px 0 12px;
+      }
+      .title h2 {
+        margin: 0;
+        font-size: 42px;
+        color: #7f1d1d;
+      }
+      .title p {
+        margin: 10px auto 0;
+        max-width: 720px;
+        font: 500 15px/1.7 Arial, sans-serif;
+        color: #7a615c;
+      }
+      .recipient {
+        text-align: center;
+        margin: 32px 0 26px;
+      }
+      .recipient .label {
+        font: 700 12px Arial, sans-serif;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+        color: #bf7b71;
+      }
+      .recipient .name {
+        margin-top: 10px;
+        font-size: 40px;
+        color: #b03020;
+        font-weight: 700;
+      }
+      .recipient .message {
+        margin-top: 10px;
+        font: 500 16px/1.7 Arial, sans-serif;
+        color: #5d4c48;
+      }
+      .details {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin: 28px 0 34px;
+      }
+      .detail {
+        background: linear-gradient(180deg, #fff8f6 0%, #fff0ed 100%);
+        border: 1px solid #f2d4cd;
+        border-radius: 18px;
+        padding: 16px 14px;
+      }
+      .detail .k {
+        font: 700 11px Arial, sans-serif;
+        letter-spacing: 0.8px;
+        text-transform: uppercase;
+        color: #bf7b71;
+      }
+      .detail .v {
+        margin-top: 8px;
+        font-size: 18px;
+        font-weight: 700;
+        color: #4b2620;
+      }
+      .impact {
+        margin: 0 auto 30px;
+        max-width: 760px;
+        text-align: center;
+        padding: 20px 22px;
+        border: 1px dashed #d8968a;
+        border-radius: 20px;
+        background: rgba(176, 48, 32, 0.04);
+        font: 600 15px/1.8 Arial, sans-serif;
+        color: #6a4d47;
+      }
+      .footer {
+        display: flex;
+        justify-content: space-between;
+        gap: 24px;
+        align-items: flex-end;
+        margin-top: 34px;
+      }
+      .signature {
+        flex: 1;
+        text-align: center;
+      }
+      .signature .line {
+        border-top: 2px solid #d3b4ad;
+        margin-bottom: 8px;
+      }
+      .signature .role {
+        font: 700 12px Arial, sans-serif;
+        color: #8c6f69;
+        text-transform: uppercase;
+        letter-spacing: 0.8px;
+      }
+      .seal {
+        width: 122px;
+        height: 122px;
+        border-radius: 50%;
+        border: 4px double #b03020;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        color: #b03020;
+        font: 700 12px/1.4 Arial, sans-serif;
+        background: rgba(176, 48, 32, 0.03);
+      }
+      .print-note {
+        margin-top: 28px;
+        text-align: center;
+        font: 500 12px Arial, sans-serif;
+        color: #9a807a;
+      }
+      @media print {
+        body { background: white; padding: 0; }
+        .certificate { box-shadow: none; border-radius: 0; max-width: none; min-height: 100vh; }
+      }
+      @media (max-width: 760px) {
+        body {
+          padding: 14px;
+        }
+        .certificate {
+          padding: 24px 18px;
+          border-width: 8px;
+          border-radius: 20px;
+        }
+        .top {
+          flex-direction: column;
+          align-items: flex-start;
+          margin-bottom: 22px;
+        }
+        .title h2 {
+          font-size: 30px;
+        }
+        .recipient .name {
+          font-size: 28px;
+        }
+        .details {
+          grid-template-columns: 1fr;
+        }
+        .footer {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        .seal {
+          margin: 0 auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <section class="certificate">
+      <div class="top">
+        <div class="brand">
+          <div class="drop">🩸</div>
+          <div>
+            <h1>LifeDrop</h1>
+            <p>Emergency Trust-Protocol for verified blood donation</p>
+          </div>
+        </div>
+        <div class="badge">Verified Donation Record</div>
+      </div>
+
+      <div class="title">
+        <h2>Certificate of Life-Saving Donation</h2>
+        <p>
+          This certificate is proudly presented in recognition of a verified blood donation completed through the LifeDrop emergency response network.
+        </p>
+      </div>
+
+      <div class="recipient">
+        <div class="label">Presented To</div>
+        <div class="name">${escapeHtml(donorName)}</div>
+        <div class="message">
+          for responding with compassion, courage, and urgency to support a critical medical need and help save lives in the community.
+        </div>
+      </div>
+
+      <div class="details">
+        <div class="detail">
+          <div class="k">Blood Group</div>
+          <div class="v">${escapeHtml(bloodGroup)}</div>
+        </div>
+        <div class="detail">
+          <div class="k">Donation Date</div>
+          <div class="v">${escapeHtml(donationDate)}</div>
+        </div>
+        <div class="detail">
+          <div class="k">Hospital</div>
+          <div class="v">${escapeHtml(hospitalName)}</div>
+        </div>
+        <div class="detail">
+          <div class="k">Certificate ID</div>
+          <div class="v">${escapeHtml(certificateId)}</div>
+        </div>
+      </div>
+
+      <div class="impact">
+        Your contribution strengthens a trusted healthcare ecosystem where verified donors, hospitals, and caregivers can respond faster during the most critical moments.
+      </div>
+
+      <div class="footer">
+        <div class="signature">
+          <div class="line"></div>
+          <div class="role">LifeDrop Medical Coordinator</div>
+        </div>
+        <div class="seal">Official<br />LifeDrop<br />Recognition</div>
+        <div class="signature">
+          <div class="line"></div>
+          <div class="role">Hospital Verification Desk</div>
+        </div>
+      </div>
+
+      <div class="print-note">
+        Generated digitally by LifeDrop after a verified donation event.
+      </div>
+    </section>
+  </body>
+</html>`
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
 }
