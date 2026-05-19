@@ -5,7 +5,9 @@ import Dashboard from './screens/Dashboard'
 import EmergencyList from './screens/EmergencyList'
 import RequestDetails from './screens/RequestDetails'
 import DonationInProgress from './screens/DonationInProgress'
+import DonationAtHospital from './screens/DonationAtHospital'
 import DonationComplete from './screens/DonationComplete'
+import DonorProfile from './screens/DonorProfile'
 import DonorLogin from './screens/DonorLogin'
 import DonorVerification from './screens/DonorVerification'
 import DoctorAccess from './screens/DoctorAccess'
@@ -18,13 +20,14 @@ const donorNavItems = [
   { id: 'home', label: 'Home', screen: 'dashboard' },
   { id: 'requests', label: 'Requests', screen: 'emergency' },
   { id: 'donate', label: 'Donate', screen: 'details' },
-  { id: 'profile', label: 'Profile', screen: 'dashboard' },
+  { id: 'profile', label: 'Profile', screen: 'profile' },
 ]
 
 const donorNavByScreen = {
   dashboard: 'home',
   emergency: 'requests',
   details: 'donate',
+  profile: 'profile',
 }
 
 export default function App() {
@@ -116,6 +119,37 @@ export default function App() {
     setScreen('complete')
   }
 
+  const openDonationComplete = (request = selectedRequest) => {
+    if (request) {
+      setSelectedRequest(request)
+      setSelectedBlood(request.blood || null)
+    }
+    handleDonationComplete()
+  }
+
+  const updateCurrentDonationApplication = (nextStatus) => {
+    if (!selectedRequest || !donorProfile) return
+
+    setDonationApplications((current) =>
+      current.map((application) =>
+        application.requestId === selectedRequest.id &&
+        application.donorEmail === donorProfile.email
+          ? { ...application, status: nextStatus, updatedAt: new Date().toISOString() }
+          : application,
+      ),
+    )
+  }
+
+  const handleDonationArrived = () => {
+    updateCurrentDonationApplication('arrived')
+    setScreen('hospital')
+  }
+
+  const handleDonationSubmitted = () => {
+    updateCurrentDonationApplication('donated')
+    setScreen('hospital')
+  }
+
   const submitDonationIntent = (request) => {
     if (!donorProfile || !request) return
 
@@ -164,13 +198,20 @@ export default function App() {
   }
 
   const reviewDonationApplication = (applicationId, status) => {
+    let updatedApplication = null
+
     setDonationApplications((current) =>
-      current.map((application) =>
-        application.id === applicationId
-          ? { ...application, status, updatedAt: new Date().toISOString() }
-          : application,
-      ),
+      current.map((application) => {
+        if (application.id !== applicationId) return application
+        updatedApplication = { ...application, status, updatedAt: new Date().toISOString() }
+        return updatedApplication
+      }),
     )
+
+    if (status === 'completed' && updatedApplication?.donorEmail === donorProfile?.email) {
+      const matchingRequest = requests.find((request) => request.id === updatedApplication?.requestId) || selectedRequest
+      openDonationComplete(matchingRequest)
+    }
   }
 
   const resetDemo = () => {
@@ -185,8 +226,8 @@ export default function App() {
   }
 
   const donorActiveNav = donorNavByScreen[screen] ?? null
-  const donorShowNav = userRole === 'donor' && ['dashboard', 'emergency', 'details'].includes(screen)
-  const showDualPreview = ['dashboard', 'emergency', 'details', 'progress', 'complete', 'doctor-dashboard'].includes(screen)
+  const donorShowNav = userRole === 'donor' && ['dashboard', 'emergency', 'details', 'profile'].includes(screen)
+  const showDualPreview = ['dashboard', 'emergency', 'details', 'profile', 'progress', 'hospital', 'complete', 'doctor-dashboard'].includes(screen)
 
   const renderSinglePhone = () => {
     if (screen === 'splash') return <SplashScreen onStart={() => setScreen('role')} />
@@ -209,6 +250,7 @@ export default function App() {
     if (screen === 'donor-verify') return <DonorVerification navigate={navigate} onComplete={handleDonorVerificationComplete} />
     if (screen === 'dashboard') return <Dashboard navigate={navigate} requests={requests} donorProfile={donorProfile} />
     if (screen === 'emergency') return <EmergencyList navigate={navigate} donorProfile={donorProfile} requests={requests} />
+    if (screen === 'profile') return <DonorProfile navigate={navigate} donorProfile={donorProfile} donationApplications={donationApplications} />
     if (screen === 'details') {
       return (
         <RequestDetails
@@ -218,6 +260,7 @@ export default function App() {
           donorProfile={donorProfile}
           donationApplications={donationApplications}
           onSubmitDonationIntent={submitDonationIntent}
+          onViewImpact={openDonationComplete}
         />
       )
     }
@@ -225,8 +268,21 @@ export default function App() {
       return (
         <DonationInProgress
           navigate={navigate}
+          selectedRequest={selectedRequest}
+          onMarkArrived={handleDonationArrived}
+        />
+      )
+    }
+    if (screen === 'hospital') {
+      return (
+        <DonationAtHospital
+          navigate={navigate}
+          selectedRequest={selectedRequest}
           selectedBlood={selectedBlood}
-          onDonationComplete={handleDonationComplete}
+          donorProfile={donorProfile}
+          donationApplications={donationApplications}
+          onDonationSubmitted={handleDonationSubmitted}
+          onViewImpact={openDonationComplete}
         />
       )
     }

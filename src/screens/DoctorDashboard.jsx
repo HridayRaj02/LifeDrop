@@ -192,6 +192,24 @@ export default function DoctorDashboard({ doctorProfile, requests, donationAppli
                 </div>
               )}
 
+              {application.status === 'arrived' && (
+                <div style={infoBannerStyle}>
+                  The donor has arrived at the hospital and is currently at the check-in stage.
+                </div>
+              )}
+
+              {application.status === 'donated' && (
+                <div style={infoBannerStyle}>
+                  The donor has marked the donation as completed. Confirm it here to unlock the impact page.
+                </div>
+              )}
+
+              {application.status === 'completed' && (
+                <div style={approvedBannerStyle}>
+                  Donation confirmed by the doctor portal. The donor can now see the final impact screen.
+                </div>
+              )}
+
               {application.status === 'rejected' && (
                 <div style={rejectedBannerStyle}>
                   This donor request was rejected. The donor can submit again for review.
@@ -200,15 +218,25 @@ export default function DoctorDashboard({ doctorProfile, requests, donationAppli
 
               <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
                 <button
-                  onClick={() => onReviewDonationApplication(application.id, 'approved')}
+                  onClick={() => onReviewDonationApplication(application.id, application.status === 'donated' ? 'completed' : 'approved')}
                   style={{
                     ...decisionButtonStyle,
-                    background: application.status === 'approved' ? '#D7F5E6' : '#1F8F5F',
-                    color: application.status === 'approved' ? '#1D7F52' : 'white',
-                    border: application.status === 'approved' ? '1px solid #B9E9CF' : 'none',
+                    background: application.status === 'approved' || application.status === 'completed' ? '#D7F5E6' : application.status === 'arrived' ? '#EEF5FF' : '#1F8F5F',
+                    color: application.status === 'approved' || application.status === 'completed' ? '#1D7F52' : application.status === 'arrived' ? '#275DA8' : 'white',
+                    border: application.status === 'approved' || application.status === 'completed' ? '1px solid #B9E9CF' : application.status === 'arrived' ? '1px solid #C8DCF8' : 'none',
+                    opacity: application.status === 'arrived' ? 0.9 : 1,
                   }}
+                  disabled={application.status === 'arrived'}
                 >
-                  {application.status === 'approved' ? 'Approved' : 'Approve donor'}
+                  {application.status === 'approved'
+                    ? 'Approved'
+                    : application.status === 'arrived'
+                      ? 'Donor arrived'
+                      : application.status === 'donated'
+                        ? 'Confirm donation'
+                        : application.status === 'completed'
+                          ? 'Donation confirmed'
+                          : 'Approve donor'}
                 </button>
                 <button
                   onClick={() => onReviewDonationApplication(application.id, 'rejected')}
@@ -217,8 +245,9 @@ export default function DoctorDashboard({ doctorProfile, requests, donationAppli
                     background: 'white',
                     color: '#A94442',
                     border: '1px solid #F2C6C6',
-                    opacity: application.status === 'approved' ? 0.7 : 1,
+                    opacity: application.status === 'completed' ? 0.55 : 1,
                   }}
+                  disabled={application.status === 'completed'}
                 >
                   Reject
                 </button>
@@ -440,6 +469,18 @@ const rejectedBannerStyle = {
   background: '#FDECEA',
   border: '1px solid #F2C6C6',
   color: '#A94442',
+  borderRadius: 14,
+  padding: '11px 12px',
+  fontSize: 11,
+  fontWeight: 700,
+  lineHeight: 1.45,
+}
+
+const infoBannerStyle = {
+  marginTop: 12,
+  background: '#EEF5FF',
+  border: '1px solid #CFE0F8',
+  color: '#275DA8',
   borderRadius: 14,
   padding: '11px 12px',
   fontSize: 11,

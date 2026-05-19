@@ -18,7 +18,7 @@ const fallbackRequest = {
   dist: '2.3 km',
 }
 
-export default function RequestDetails({ navigate, selectedBlood, selectedRequest, donorProfile, donationApplications, onSubmitDonationIntent }) {
+export default function RequestDetails({ navigate, selectedBlood, selectedRequest, donorProfile, donationApplications, onSubmitDonationIntent, onViewImpact }) {
   const request = selectedRequest || { ...fallbackRequest, blood: selectedBlood || fallbackRequest.blood }
   const eligibility = getDonationEligibility(donorProfile, request.blood)
   const canDonate = eligibility.allowed
@@ -29,6 +29,12 @@ export default function RequestDetails({ navigate, selectedBlood, selectedReques
   )
   const actionLabel = currentApplication?.status === 'approved'
     ? 'Doctor approved • Continue to hospital'
+    : currentApplication?.status === 'arrived'
+      ? 'At hospital • Continue'
+      : currentApplication?.status === 'donated'
+        ? 'Waiting for doctor confirmation'
+        : currentApplication?.status === 'completed'
+          ? 'Donation confirmed'
     : currentApplication?.status === 'pending'
       ? 'Pending doctor approval'
       : currentApplication?.status === 'rejected'
@@ -105,8 +111,16 @@ export default function RequestDetails({ navigate, selectedBlood, selectedReques
           <button
             onClick={() => {
               if (!canDonate) return
+              if (currentApplication?.status === 'completed') {
+                onViewImpact(request)
+                return
+              }
               if (currentApplication?.status === 'approved') {
                 navigate('progress', request)
+                return
+              }
+              if (currentApplication?.status === 'arrived' || currentApplication?.status === 'donated') {
+                navigate('hospital', request)
                 return
               }
               onSubmitDonationIntent(request)
@@ -116,8 +130,14 @@ export default function RequestDetails({ navigate, selectedBlood, selectedReques
               padding: '15px',
               background: !canDonate
                 ? 'linear-gradient(135deg, #F7D6D1, #E8C4BF)'
+                : currentApplication?.status === 'completed'
+                  ? 'linear-gradient(135deg, #1F8F5F, #2CB67D)'
                 : currentApplication?.status === 'approved'
                   ? 'linear-gradient(135deg, #1F8F5F, #2CB67D)'
+                  : currentApplication?.status === 'arrived'
+                    ? 'linear-gradient(135deg, #1D4ED8, #3B82F6)'
+                    : currentApplication?.status === 'donated'
+                      ? 'linear-gradient(135deg, #B57A15, #D89A2B)'
                   : currentApplication?.status === 'pending'
                     ? 'linear-gradient(135deg, #B57A15, #D89A2B)'
                     : 'linear-gradient(135deg, #B03020, #E05050)',
@@ -154,6 +174,24 @@ export default function RequestDetails({ navigate, selectedBlood, selectedReques
           {currentApplication?.status === 'approved' && (
             <div style={{ background: '#ECFDF3', border: '1px solid #CDEFD9', color: '#1D7F52', borderRadius: 16, padding: '12px 14px', fontSize: 12, fontWeight: 700, lineHeight: 1.45, marginBottom: 12 }}>
               Doctor approval received. You can now continue to the hospital progress screen.
+            </div>
+          )}
+
+          {currentApplication?.status === 'arrived' && (
+            <div style={{ background: '#EEF5FF', border: '1px solid #CFE0F8', color: '#275DA8', borderRadius: 16, padding: '12px 14px', fontSize: 12, fontWeight: 700, lineHeight: 1.45, marginBottom: 12 }}>
+              Arrival marked. Continue to the hospital checkpoint screen to complete the donation flow.
+            </div>
+          )}
+
+          {currentApplication?.status === 'donated' && (
+            <div style={{ background: '#FFF7E7', border: '1px solid #F4D799', color: '#8B5A14', borderRadius: 16, padding: '12px 14px', fontSize: 12, fontWeight: 700, lineHeight: 1.45, marginBottom: 12 }}>
+              Donation marked from your side. The doctor just needs to confirm it before the final impact page opens.
+            </div>
+          )}
+
+          {currentApplication?.status === 'completed' && (
+            <div style={{ background: '#ECFDF3', border: '1px solid #CDEFD9', color: '#1D7F52', borderRadius: 16, padding: '12px 14px', fontSize: 12, fontWeight: 700, lineHeight: 1.45, marginBottom: 12 }}>
+              Donation confirmed by the doctor. Your life-saving impact page is now ready.
             </div>
           )}
 

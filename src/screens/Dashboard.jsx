@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AlertTriangle, Bell, ChevronRight, ClipboardList, Droplets, Heart, MapPin, X } from 'lucide-react'
+import { AlertTriangle, Bell, ChevronRight, ClipboardList, Droplets, Heart, MapPin, Share2, X } from 'lucide-react'
 import BloodBadge from '../components/ui/BloodBadge'
 import HelpButton from '../components/ui/HelpButton'
 import UrgencyBadge from '../components/ui/UrgencyBadge'
@@ -8,10 +8,34 @@ import { formatDisplayDate, getCooldownStatus, getDonationEligibility } from '..
 
 export default function Dashboard({ navigate, requests, donorProfile }) {
   const featured = requests[0]
-  const topRequests = requests.slice(0, 3)
+  const topRequests = requests.slice(0, 5)
   const cooldown = getCooldownStatus(donorProfile?.lastDonationDate)
   const [dismissedCooldownDate, setDismissedCooldownDate] = useState(null)
   const showCooldownTips = cooldown.isCoolingDown && dismissedCooldownDate !== donorProfile?.lastDonationDate
+  const activeHospitals = new Set(requests.map((request) => request.hospital)).size
+  const bloodGroupsLive = new Set(requests.map((request) => request.blood)).size
+  const shareReferral = async () => {
+    const message = 'I am part of LifeDrop, a verified blood donor network. Join in and help save a life when the next emergency request appears.'
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Join me on LifeDrop',
+          text: message,
+        })
+        return
+      } catch {
+        // Fall back to clipboard.
+      }
+    }
+
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(message)
+      window.alert('Referral message copied. Share it and bring another donor into LifeDrop.')
+      return
+    }
+
+    window.alert(message)
+  }
 
   return (
     <>
@@ -120,9 +144,9 @@ export default function Dashboard({ navigate, requests, donorProfile }) {
 
           <div style={{ display: 'flex', gap: 10, marginBottom: 18 }}>
             {[
-              { num: '12', label: 'Lives Saved', icon: '❤️', color: '#C0392B' },
-              { num: '8', label: 'Donations', icon: '🩸', color: '#E05050' },
-              { num: requests.length, label: 'Live Requests', icon: '🏥', color: '#D68910' },
+              { num: '184', label: 'Lives Supported', icon: '❤️', color: '#C0392B' },
+              { num: '63', label: 'Completed Donations', icon: '🩸', color: '#E05050' },
+              { num: `${requests.length}+`, label: 'Active Requests', icon: '🏥', color: '#D68910' },
             ].map((s, index) => (
               <div key={s.label} className={`lifedrop-slide-up ${index === 0 ? 'lifedrop-slide-delay-1' : index === 1 ? 'lifedrop-slide-delay-2' : 'lifedrop-slide-delay-3'}`} style={{ flex: 1, background: 'linear-gradient(180deg, #ffffff 0%, #fff7f5 100%)', borderRadius: 18, padding: '12px 10px', textAlign: 'center', boxShadow: '0 10px 24px rgba(0,0,0,0.06)', border: '1px solid #f4e5e2' }}>
                 <div style={{ fontSize: 20 }}>{s.icon}</div>
@@ -137,6 +161,21 @@ export default function Dashboard({ navigate, requests, donorProfile }) {
             <button onClick={() => navigate('emergency')} style={{ background: 'none', border: 'none', color: '#C0392B', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2, fontFamily: 'Nunito, sans-serif' }}>
               See all <ChevronRight size={13} />
             </button>
+          </div>
+
+          <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+            <div style={miniInfoCardStyle}>
+              <div style={miniInfoLabelStyle}>Hospitals live</div>
+              <div style={miniInfoValueStyle}>{activeHospitals}</div>
+            </div>
+            <div style={miniInfoCardStyle}>
+              <div style={miniInfoLabelStyle}>Blood groups active</div>
+              <div style={miniInfoValueStyle}>{bloodGroupsLive}</div>
+            </div>
+            <div style={miniInfoCardStyle}>
+              <div style={miniInfoLabelStyle}>Units needed</div>
+              <div style={miniInfoValueStyle}>{requests.reduce((sum, request) => sum + request.units, 0)}</div>
+            </div>
           </div>
 
           {topRequests.map((request) => {
@@ -192,9 +231,9 @@ export default function Dashboard({ navigate, requests, donorProfile }) {
           <div style={{ fontSize: 16, fontWeight: 900, color: '#1a1a1a', marginTop: 6, marginBottom: 10 }}>My Activity</div>
           <div style={{ display: 'flex', gap: 10 }}>
             {[
-              { icon: <Droplets size={24} color="#C0392B" />, label: 'My Donations', count: 8 },
-              { icon: <ClipboardList size={24} color="#E05050" />, label: 'My Requests', count: requests.length },
-              { icon: <Heart size={24} color="#C0392B" fill="#C0392B" />, label: 'Saved Lives', count: 12 },
+              { icon: <Droplets size={24} color="#C0392B" />, label: 'My Donations', count: 14 },
+              { icon: <ClipboardList size={24} color="#E05050" />, label: 'My Responses', count: 29 },
+              { icon: <Heart size={24} color="#C0392B" fill="#C0392B" />, label: 'Saved Lives', count: 41 },
             ].map((a) => (
               <div key={a.label} className="lifedrop-slide-up lifedrop-slide-delay-2" style={{ flex: 1, background: 'linear-gradient(180deg, #ffffff 0%, #fff8f6 100%)', borderRadius: 18, padding: '14px 10px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 5, boxShadow: '0 10px 24px rgba(0,0,0,0.05)', border: '1px solid #f4e5e2' }}>
                 {a.icon}
@@ -202,6 +241,21 @@ export default function Dashboard({ navigate, requests, donorProfile }) {
                 <div style={{ fontSize: 10, fontWeight: 700, color: '#888', textAlign: 'center' }}>{a.label}</div>
               </div>
             ))}
+          </div>
+
+          <div className="lifedrop-slide-up lifedrop-slide-delay-3" style={referralCardStyle}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+              <div style={referralIconShellStyle}>💌</div>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 900, color: '#1A1A1A' }}>Refer others to save another life</div>
+                <div style={{ fontSize: 11, color: '#8E7670', marginTop: 2 }}>
+                  Grow the donor network before the next emergency request goes live.
+                </div>
+              </div>
+            </div>
+            <button onClick={shareReferral} style={referralButtonStyle}>
+              <Share2 size={15} /> Save a life, refer someone
+            </button>
           </div>
         </div>
       </div>
@@ -309,4 +363,67 @@ const popupActionStyle = {
   cursor: 'pointer',
   fontFamily: 'Nunito, sans-serif',
   boxShadow: '0 10px 24px rgba(176,48,32,0.22)',
+}
+
+const miniInfoCardStyle = {
+  flex: 1,
+  background: 'linear-gradient(180deg, #ffffff 0%, #fff7f5 100%)',
+  border: '1px solid #F2E1DD',
+  borderRadius: 16,
+  padding: '10px 12px',
+  boxShadow: '0 8px 20px rgba(0,0,0,0.04)',
+}
+
+const miniInfoLabelStyle = {
+  fontSize: 10,
+  fontWeight: 800,
+  color: '#B78378',
+  textTransform: 'uppercase',
+  letterSpacing: 0.5,
+}
+
+const miniInfoValueStyle = {
+  marginTop: 5,
+  fontSize: 17,
+  fontWeight: 900,
+  color: '#1A1A1A',
+}
+
+const referralCardStyle = {
+  marginTop: 14,
+  background: 'linear-gradient(135deg, #FFF7F3 0%, #FFFFFF 100%)',
+  border: '1px solid #F4DDD7',
+  borderRadius: 20,
+  padding: '16px 16px 14px',
+  boxShadow: '0 10px 26px rgba(176,48,32,0.08)',
+}
+
+const referralIconShellStyle = {
+  width: 38,
+  height: 38,
+  borderRadius: 12,
+  background: '#FDECEA',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: 18,
+  flexShrink: 0,
+}
+
+const referralButtonStyle = {
+  width: '100%',
+  marginTop: 4,
+  padding: '12px 14px',
+  background: 'linear-gradient(135deg, #FFF1ED, #FDE1DB)',
+  border: '1px solid #F3C7BC',
+  borderRadius: 16,
+  color: '#B03020',
+  fontWeight: 900,
+  fontSize: 13,
+  cursor: 'pointer',
+  fontFamily: 'Nunito, sans-serif',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 8,
 }

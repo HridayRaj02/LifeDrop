@@ -45,6 +45,8 @@ export default function EmergencyList({ navigate, donorProfile, requests }) {
   const [bg, setBg] = useState('All')
   const [dist, setDist] = useState('Nearby')
   const [urg, setUrg] = useState('All')
+  const totalUnitsRequested = requests.reduce((sum, request) => sum + request.units, 0)
+  const activeHospitals = new Set(requests.map((request) => request.hospital)).size
 
   const filtered = requests.filter((request) => {
     if (bg !== 'All' && request.blood !== bg) return false
@@ -88,6 +90,21 @@ export default function EmergencyList({ navigate, donorProfile, requests }) {
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 14px', scrollbarWidth: 'none', background: '#F9F2F2' }}>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
+          <div style={summaryCardStyle}>
+            <div style={summaryLabelStyle}>Requests live</div>
+            <div style={summaryValueStyle}>{requests.length}</div>
+          </div>
+          <div style={summaryCardStyle}>
+            <div style={summaryLabelStyle}>Units needed</div>
+            <div style={summaryValueStyle}>{totalUnitsRequested}</div>
+          </div>
+          <div style={summaryCardStyle}>
+            <div style={summaryLabelStyle}>Hospitals</div>
+            <div style={summaryValueStyle}>{activeHospitals}</div>
+          </div>
+        </div>
+
         {filtered.map((request) => {
           const eligibility = getDonationEligibility(donorProfile, request.blood)
 
@@ -204,4 +221,28 @@ const blockedPillStyle = {
   lineHeight: 1.25,
   justifyContent: 'center',
   textAlign: 'center',
+}
+
+const summaryCardStyle = {
+  flex: 1,
+  background: 'linear-gradient(180deg, #ffffff 0%, #fff7f5 100%)',
+  border: '1px solid #F2E1DD',
+  borderRadius: 16,
+  padding: '10px 12px',
+  boxShadow: '0 8px 20px rgba(0,0,0,0.04)',
+}
+
+const summaryLabelStyle = {
+  fontSize: 10,
+  fontWeight: 800,
+  color: '#B78378',
+  textTransform: 'uppercase',
+  letterSpacing: 0.5,
+}
+
+const summaryValueStyle = {
+  marginTop: 5,
+  fontSize: 17,
+  fontWeight: 900,
+  color: '#1A1A1A',
 }

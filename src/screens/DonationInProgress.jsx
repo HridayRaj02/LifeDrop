@@ -8,7 +8,11 @@ const STEPS = [
   { id: 4, label: 'Donation Complete', emoji: '🩸', status: 'inactive' },
 ]
 
-export default function DonationInProgress({ navigate, onDonationComplete }) {
+export default function DonationInProgress({ navigate, selectedRequest, onMarkArrived }) {
+  const hospitalName = selectedRequest?.hospital || 'City Hospital'
+  const hospitalAddress = selectedRequest?.address || '223 Londway Road, Danakinchi, 22077'
+  const distance = selectedRequest?.dist || '2.3 km'
+
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#F9F2F2', overflow: 'hidden' }}>
       <div style={{ background: 'linear-gradient(135deg, #8f1c17, #C0392B)', padding: '20px 20px 22px', flexShrink: 0, position: 'relative', overflow: 'hidden' }}>
@@ -66,10 +70,10 @@ export default function DonationInProgress({ navigate, onDonationComplete }) {
           <div className="lifedrop-slide-up lifedrop-slide-delay-1" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #fff8f7 100%)', borderRadius: 22, padding: 16, marginBottom: 12, boxShadow: '0 10px 24px rgba(0,0,0,0.07)', border: '2px solid #FDECEA' }}>
             <div style={{ display: 'flex', gap: 12 }}>
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 15, fontWeight: 900, color: '#1a1a1a', marginBottom: 6 }}>Head to City Hospital</div>
+                <div style={{ fontSize: 15, fontWeight: 900, color: '#1a1a1a', marginBottom: 6 }}>Head to {hospitalName}</div>
                 <div style={{ display: 'flex', gap: 6, marginBottom: 4 }}>
                   <MapPin size={13} color="#C0392B" />
-                  <span style={{ fontSize: 12, color: '#888' }}>Distance: 2.3 km away</span>
+                  <span style={{ fontSize: 12, color: '#888' }}>Distance: {distance} away</span>
                 </div>
                 <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
                   <span style={{ fontSize: 12, color: '#aaa', marginLeft: 19 }}>⏱ Est. time: 8 mins</span>
@@ -85,8 +89,8 @@ export default function DonationInProgress({ navigate, onDonationComplete }) {
           </div>
 
           <div className="lifedrop-slide-up lifedrop-slide-delay-2" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #fffaf9 100%)', borderRadius: 18, padding: '14px 16px', marginBottom: 12, boxShadow: '0 10px 24px rgba(0,0,0,0.06)' }}>
-            <div style={{ fontSize: 15, fontWeight: 900, color: '#1a1a1a', marginBottom: 4 }}>City Hospital</div>
-            <div style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>223 Londway Road, Danakinchi, 22077</div>
+            <div style={{ fontSize: 15, fontWeight: 900, color: '#1a1a1a', marginBottom: 4 }}>{hospitalName}</div>
+            <div style={{ fontSize: 12, color: '#999', marginBottom: 4 }}>{hospitalAddress}</div>
             <div style={{ fontSize: 12, color: '#aaa', marginBottom: 10 }}>Contact handled via app (no phone exposed)</div>
             <VerifiedBadge label="Verified hospital" />
           </div>
@@ -122,7 +126,7 @@ export default function DonationInProgress({ navigate, onDonationComplete }) {
           <div className="lifedrop-slide-up lifedrop-slide-delay-3" style={{ background: 'linear-gradient(180deg, #ffffff 0%, #fffaf9 100%)', borderRadius: 18, padding: '14px 16px', boxShadow: '0 10px 24px rgba(0,0,0,0.06)' }}>
             <div style={{ fontWeight: 800, color: '#888', marginBottom: 10, textTransform: 'uppercase', letterSpacing: 0.5, fontSize: 10 }}>Active Progress</div>
             <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-              <button onClick={onDonationComplete} style={{ flex: 1, padding: '13px', background: 'linear-gradient(135deg, #B03020, #E05050)', color: 'white', borderRadius: 18, fontWeight: 900, fontSize: 14, border: 'none', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', boxShadow: '0 6px 18px rgba(192,57,43,0.4)' }}>
+              <button onClick={onMarkArrived} style={{ flex: 1, padding: '13px', background: 'linear-gradient(135deg, #B03020, #E05050)', color: 'white', borderRadius: 18, fontWeight: 900, fontSize: 14, border: 'none', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', boxShadow: '0 6px 18px rgba(192,57,43,0.4)' }}>
                 ✅ Mark as Arrived
               </button>
               <button style={{ padding: '13px 14px', background: '#FDF0F0', border: '2px solid #FDECEA', borderRadius: 18, color: '#C0392B', fontWeight: 800, fontSize: 12, cursor: 'pointer', fontFamily: 'Nunito, sans-serif', whiteSpace: 'nowrap' }}>
