@@ -11,6 +11,29 @@ const PRECAUTIONS = [
 export default function DonationComplete({ navigate, selectedBlood, donorProfile, onReset }) {
   const cooldown = getCooldownStatus(donorProfile?.lastDonationDate || getTodayIsoDate())
 
+  const shareReferral = async () => {
+    const message = 'I just completed a verified blood donation on LifeDrop. Save a life with me by joining as a donor and being ready when an emergency request appears.'
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Join me on LifeDrop',
+          text: message,
+        })
+        return
+      } catch {
+        // Fall through to clipboard for browsers where share is dismissed or unsupported.
+      }
+    }
+
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(message)
+      window.alert('Referral message copied. Share it and help save another life.')
+      return
+    }
+
+    window.alert(message)
+  }
+
   const downloadCertificate = () => {
     const donationDate = new Date()
     const donorName = donorProfile?.fullName || 'Verified Donor'
@@ -146,6 +169,24 @@ export default function DonationComplete({ navigate, selectedBlood, donorProfile
           <Share2 size={16} /> Share your impact
         </button>
 
+        <div className="lifedrop-slide-up lifedrop-slide-delay-3" style={referralCardStyle}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+            <div style={referralIconShellStyle}>💌</div>
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 900, color: '#1A1A1A' }}>Refer others to save another life</div>
+              <div style={{ fontSize: 11, color: '#8E7670', marginTop: 2 }}>
+                One message from you can bring the next verified donor into an emergency.
+              </div>
+            </div>
+          </div>
+          <div style={{ fontSize: 12, color: '#6E5B57', lineHeight: 1.55, marginBottom: 12 }}>
+            Share LifeDrop with friends, family, or classmates and help build a stronger response circle before the next urgent request arrives.
+          </div>
+          <button className="lifedrop-slide-up lifedrop-slide-delay-3" onClick={shareReferral} style={referralButtonStyle}>
+            <Share2 size={16} /> Save a life, refer someone
+          </button>
+        </div>
+
         <div style={{ display: 'flex', justifyContent: 'center', gap: 20 }}>
           {[
             { icon: '🏥', label: 'Safe donation completed' },
@@ -251,6 +292,44 @@ const resetButtonStyle = {
   fontWeight: 800,
   cursor: 'pointer',
   fontFamily: 'Nunito, sans-serif',
+}
+
+const referralCardStyle = {
+  background: 'linear-gradient(135deg, #FFF7F3 0%, #FFFFFF 100%)',
+  border: '1px solid #F4DDD7',
+  borderRadius: 20,
+  padding: '16px 16px 14px',
+  marginBottom: 16,
+  boxShadow: '0 10px 26px rgba(176,48,32,0.08)',
+}
+
+const referralIconShellStyle = {
+  width: 38,
+  height: 38,
+  borderRadius: 12,
+  background: '#FDECEA',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  fontSize: 18,
+  flexShrink: 0,
+}
+
+const referralButtonStyle = {
+  width: '100%',
+  padding: '12px 14px',
+  background: 'linear-gradient(135deg, #FFF1ED, #FDE1DB)',
+  border: '1px solid #F3C7BC',
+  borderRadius: 16,
+  color: '#B03020',
+  fontWeight: 900,
+  fontSize: 13,
+  cursor: 'pointer',
+  fontFamily: 'Nunito, sans-serif',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: 8,
 }
 
 function createCertificateHtml({ donorName, bloodGroup, donationDate, hospitalName, certificateId }) {

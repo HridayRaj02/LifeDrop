@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CalendarDays, FileBadge2, HeartPulse, Mail, Phone, Scale, Shield, UserRound } from 'lucide-react'
+import { getTodayIsoDate } from '../utils/bloodCompatibility'
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
 
@@ -12,7 +13,7 @@ const initialForm = {
   bloodGroup: 'O+',
   dateOfBirth: '1998-05-18',
   weight: '56',
-  lastDonationDate: '2025-12-08',
+  lastDonationDate: '',
   medications: 'Iron supplement, Vitamin D',
   procedures: 'No recent tattoo, piercing, or surgery in the last 6 months',
   travelHistory: 'No travel to malaria-endemic region recently',
@@ -25,6 +26,7 @@ const initialForm = {
 
 export default function DonorVerification({ navigate, onComplete }) {
   const [form, setForm] = useState(initialForm)
+  const hasDonatedBefore = Boolean(form.lastDonationDate)
 
   const updateField = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }))
@@ -139,8 +141,30 @@ export default function DonorVerification({ navigate, onComplete }) {
               <input value={form.weight} onChange={(e) => updateField('weight', e.target.value)} style={inputStyle} />
             </Field>
             <Field label="Last Donation Date" icon={<CalendarDays size={16} color="#C0392B" />}>
-              <input type="date" value={form.lastDonationDate} onChange={(e) => updateField('lastDonationDate', e.target.value)} style={inputStyle} />
+              <input
+                type="date"
+                value={form.lastDonationDate}
+                onChange={(e) => updateField('lastDonationDate', e.target.value)}
+                style={{ ...inputStyle, opacity: hasDonatedBefore ? 1 : 0.55 }}
+                disabled={!hasDonatedBefore}
+              />
             </Field>
+          </div>
+          <div style={optionGroupStyle}>
+            <button
+              type="button"
+              onClick={() => updateField('lastDonationDate', '')}
+              style={!hasDonatedBefore ? activeChipStyle : neutralChipStyle}
+            >
+              Never donated before
+            </button>
+            <button
+              type="button"
+              onClick={() => updateField('lastDonationDate', form.lastDonationDate || getTodayIsoDate())}
+              style={hasDonatedBefore ? activeChipStyle : neutralChipStyle}
+            >
+              I have donated before
+            </button>
           </div>
           <div style={guidelineRowStyle}>
             <span>18-65 years preferred</span>
@@ -343,6 +367,14 @@ const stackedFieldsCompactStyle = {
   flexWrap: 'wrap',
 }
 
+const optionGroupStyle = {
+  marginTop: 12,
+  padding: 6,
+  borderRadius: 18,
+  background: '#FFF5F5',
+  border: '1px solid #F1DDDD',
+}
+
 const primaryButtonStyle = {
   width: '100%',
   border: 'none',
@@ -367,4 +399,28 @@ const secondaryButtonStyle = {
   padding: '10px 14px',
   cursor: 'pointer',
   fontFamily: 'Nunito, sans-serif',
+}
+
+const neutralChipStyle = {
+  flex: 1,
+  minWidth: 0,
+  border: '1px solid transparent',
+  background: 'transparent',
+  color: '#8F6666',
+  borderRadius: 14,
+  padding: '11px 12px',
+  fontSize: 12,
+  fontWeight: 800,
+  cursor: 'pointer',
+  fontFamily: 'Nunito, sans-serif',
+  textAlign: 'center',
+  transition: 'all 0.2s ease',
+}
+
+const activeChipStyle = {
+  ...neutralChipStyle,
+  border: '1px solid #F3C5BC',
+  background: '#FFFFFF',
+  color: '#C0392B',
+  boxShadow: '0 6px 18px rgba(176,48,32,0.08)',
 }

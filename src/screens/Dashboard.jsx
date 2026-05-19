@@ -1,13 +1,17 @@
-import { AlertTriangle, Bell, ChevronRight, ClipboardList, Droplets, Heart, MapPin } from 'lucide-react'
+import { useState } from 'react'
+import { AlertTriangle, Bell, ChevronRight, ClipboardList, Droplets, Heart, MapPin, X } from 'lucide-react'
 import BloodBadge from '../components/ui/BloodBadge'
 import HelpButton from '../components/ui/HelpButton'
 import UrgencyBadge from '../components/ui/UrgencyBadge'
 import VerifiedBadge from '../components/ui/VerifiedBadge'
-import { getDonationEligibility } from '../utils/bloodCompatibility'
+import { formatDisplayDate, getCooldownStatus, getDonationEligibility } from '../utils/bloodCompatibility'
 
 export default function Dashboard({ navigate, requests, donorProfile }) {
   const featured = requests[0]
   const topRequests = requests.slice(0, 3)
+  const cooldown = getCooldownStatus(donorProfile?.lastDonationDate)
+  const [dismissedCooldownDate, setDismissedCooldownDate] = useState(null)
+  const showCooldownTips = cooldown.isCoolingDown && dismissedCooldownDate !== donorProfile?.lastDonationDate
 
   return (
     <>
@@ -51,6 +55,43 @@ export default function Dashboard({ navigate, requests, donorProfile }) {
 
       <div style={{ flex: 1, overflowY: 'auto', scrollbarWidth: 'none', background: '#F9F2F2' }}>
         <div style={{ padding: '14px 16px 20px' }}>
+          {showCooldownTips && (
+            <div style={popupOverlayStyle}>
+              <div className="lifedrop-slide-up" style={popupCardStyle}>
+                <button type="button" onClick={() => setDismissedCooldownDate(donorProfile?.lastDonationDate)} style={closeButtonStyle}>
+                  <X size={16} color="#8C4738" />
+                </button>
+                <div style={{ display: 'flex', gap: 10, alignItems: 'center', marginBottom: 10 }}>
+                  <div style={warningIconShellStyle}>
+                    <AlertTriangle size={16} color="#B03020" />
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 900, color: '#1A1A1A' }}>Donation cooldown active</div>
+                    <div style={{ fontSize: 11, color: '#8C6C66', marginTop: 2 }}>
+                      Available again on {formatDisplayDate(cooldown.nextEligibleDate)}
+                    </div>
+                  </div>
+                </div>
+                <div style={{ fontSize: 12, color: '#7A5A54', lineHeight: 1.55, marginBottom: 10 }}>
+                  Give your body a little recovery window before the next life-saving donation.
+                </div>
+                {[
+                  'Drink extra water and keep meals iron-rich for the next day.',
+                  'Avoid intense workouts or heavy lifting until your body fully settles.',
+                  'If you feel dizzy, rest and keep the donation bandage on for a few hours.',
+                ].map((tip) => (
+                  <div key={tip} style={tipRowStyle}>
+                    <span style={tipDotStyle}>•</span>
+                    <span style={{ fontSize: 11, color: '#6E5752', lineHeight: 1.45 }}>{tip}</span>
+                  </div>
+                ))}
+                <button type="button" onClick={() => setDismissedCooldownDate(donorProfile?.lastDonationDate)} style={popupActionStyle}>
+                  Understood
+                </button>
+              </div>
+            </div>
+          )}
+
           {featured && (
             <div className="lifedrop-slide-up" onClick={() => navigate('details', featured)} style={{ background: 'linear-gradient(135deg, #8F1C17 0%, #C0392B 38%, #EF6A5A 100%)', borderRadius: 24, padding: '20px 18px', marginBottom: 18, cursor: 'pointer', boxShadow: '0 16px 36px rgba(192,57,43,0.38)', position: 'relative', overflow: 'hidden' }}>
               <div className="lifedrop-float" style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.08)' }} />
@@ -198,4 +239,74 @@ const blockedPillStyle = {
   lineHeight: 1.25,
   justifyContent: 'center',
   textAlign: 'center',
+}
+
+const popupOverlayStyle = {
+  position: 'relative',
+  marginBottom: 16,
+}
+
+const popupCardStyle = {
+  position: 'relative',
+  background: 'linear-gradient(180deg, #FFF9F5 0%, #FFF0EA 100%)',
+  border: '1px solid #F2C4B7',
+  borderLeft: '5px solid #D64532',
+  borderRadius: 22,
+  padding: '16px 16px 14px',
+  boxShadow: '0 14px 30px rgba(176,48,32,0.12)',
+}
+
+const warningIconShellStyle = {
+  width: 34,
+  height: 34,
+  borderRadius: 12,
+  background: '#FDE7E3',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexShrink: 0,
+}
+
+const closeButtonStyle = {
+  position: 'absolute',
+  top: 10,
+  right: 10,
+  background: 'rgba(255,255,255,0.75)',
+  border: '1px solid #F1D7D0',
+  width: 30,
+  height: 30,
+  borderRadius: '50%',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  cursor: 'pointer',
+}
+
+const tipRowStyle = {
+  display: 'flex',
+  alignItems: 'flex-start',
+  gap: 8,
+  marginBottom: 8,
+}
+
+const tipDotStyle = {
+  fontSize: 16,
+  lineHeight: 1,
+  color: '#B03020',
+  marginTop: -1,
+}
+
+const popupActionStyle = {
+  width: '100%',
+  marginTop: 6,
+  border: 'none',
+  borderRadius: 16,
+  padding: '11px 14px',
+  background: 'linear-gradient(135deg, #B03020, #E05050)',
+  color: 'white',
+  fontSize: 12,
+  fontWeight: 900,
+  cursor: 'pointer',
+  fontFamily: 'Nunito, sans-serif',
+  boxShadow: '0 10px 24px rgba(176,48,32,0.22)',
 }
